@@ -11,10 +11,24 @@ RoxygenNote: 7.2.3
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+biocViews:
 Imports: 
+    phyloseq,
+    microbiome,
+    vegan,
     cowplot,
     ggplot2,
     knitr,
-    rwantshue (>= 0.0.3)
-Remotes:  
-    hoesler/rwantshue
+    tidyverse,
+    rwantshue (>= 0.0.3),
+    pairwiseAdonis (>= 0.4.1),
+    distill,
+    purrr,
+    dplyr,
+    tibble
+Remotes: 
+    hoesler/rwantshue,
+    github::pmartinezarbizu/pairwiseAdonis/pairwiseAdonis
+Depends: 
+    R (>= 2.10)
+LazyData: true
