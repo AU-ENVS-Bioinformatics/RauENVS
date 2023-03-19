@@ -1,0 +1,4 @@
+name: Phyloseq analysis
+description: >
+   A quick analysis of OTU using mainly phyloseq
+create_dir: FALSE
