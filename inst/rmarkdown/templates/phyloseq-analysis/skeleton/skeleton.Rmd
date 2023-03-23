@@ -1,6 +1,5 @@
 ---
 title: "Phyloseq analysis template"
-date: "The Date"
 author:
   - name: "Your name"
     affiliation: AU-ENVS Bioinformatics
