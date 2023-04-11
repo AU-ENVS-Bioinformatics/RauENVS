@@ -1,0 +1,92 @@
+---
+title: "Parse Antismash"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Parse Antismash}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+This notebook parses antismash and it is heavily inspired in the work of XXX. 
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Set up
+
+```{r setup}
+library(RauENVS)
+antismash_directory <- system.file(
+  "antismash_example_directory",package =  "RauENVS"
+  )
+# Edit this to your actual file!!! and remove or comment the example file
+# For example:
+# antismash_directory <- "User/MyPath/antismash"
+```
+
+First, we need to identify the json files:
+
+```{r json}
+list_jsons <- function(dir) list.files(
+  dir, ".json$", full.names = T,recursive = T,include.dirs = T
+  )
+(jsons <- list_jsons(antismash_directory))
+(genome_ids <- stringr::str_match(basename(jsons), "(^.+)\\.json")[,2])
+names(jsons) <- genome_ids
+```
+
+## Get features
+
+Now, we want to extract the features for each json file. 
+
+```{r features}
+features <- get_antismash_features(jsons)
+```
+
+
+Features is a large list, so inspect it carefully. It should have as many lists as json files:
+
+```{r sanity_check}
+stopifnot(length(features) == length(jsons))
+```
+
+## Regions
+
+Now, we are extracting all regions:
+
+```{r regions}
+(regions <- get_antismash_regions(features))
+# write.csv(regions, "region.csv")
+```
+
+You will notice that the product column is nested (each cell is a list of values). You can either *paste* the different values:
+
+```{r paste}
+regions |>
+  dplyr::mutate(
+    product = purrr::map(product, paste0, collapse = ",") |>
+      as.character()
+    )
+```
+
+Or you can unnest the DataFrame by creating a new row per each product:
+
+```{r unnest}
+regions |>
+  tidyr::unnest("product")
+```
+
+## Modules
+
+Now, we extract the modules:
+
+```{r modules}
+(modules <- get_antismash_modules(features))
+# write.csv(modules, "modules.csv")
+
+```
+
