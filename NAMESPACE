@@ -3,6 +3,8 @@
 export(get_antismash_features)
 export(get_antismash_modules)
 export(get_antismash_regions)
+export(get_bigscape_clustering)
+export(get_bigscape_networks)
 export(get_wants_hue)
 export(make_physeq_tax_label_unique)
 export(remove_silva_prefix_from_taxtable)

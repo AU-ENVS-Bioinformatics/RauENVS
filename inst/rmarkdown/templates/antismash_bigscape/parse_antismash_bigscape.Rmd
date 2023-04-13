@@ -7,7 +7,9 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This notebook parses antismash and it is heavily inspired in the work of XXX. 
+This notebook parses antismash and bigscape output and it is heavily inspired in the work of Roberto Sánchez.
+
+<https://github.com/robertosanchezn/AS_hqMAGs/blob/main/r_markdown/notebook/parse_bigscape.R>
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
@@ -16,7 +18,9 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Set up
+## Antismash
+
+### Set up
 
 ```{r setup}
 library(RauENVS)
@@ -39,14 +43,13 @@ list_jsons <- function(dir) list.files(
 names(jsons) <- genome_ids
 ```
 
-## Get features
+### Get features
 
-Now, we want to extract the features for each json file. 
+Now, we want to extract the features for each json file.
 
 ```{r features}
 features <- get_antismash_features(jsons)
 ```
-
 
 Features is a large list, so inspect it carefully. It should have as many lists as json files:
 
@@ -80,7 +83,7 @@ regions |>
   tidyr::unnest("product")
 ```
 
-## Modules
+### Modules
 
 Now, we extract the modules:
 
@@ -90,3 +93,41 @@ Now, we extract the modules:
 
 ```
 
+## BigScape
+
+### Set up
+
+```{r setup2}
+bigscape_directory <- system.file(
+  "bigscape_example_directory",package =  "RauENVS"
+  )
+# Edit this to your actual file!!! and remove or comment the example file
+# For example:
+# bigscape_directory <- "User/MyPath/bigscape"
+```
+
+First, we will create a DataFrame with clustering information:
+
+```{r read_bigscape}
+(bigscape_clusters <- get_bigscape_clustering(bigscape_directory))
+#write_csv(bigscape_clusters, "bigscape_df.csv")
+
+```
+
+We can extract more information. For example, for finding GCFs
+
+```{r}
+library(tidyverse)
+bigscape_clusters |>
+    select(bgc_id, starts_with('GCF')) |>
+    filter(str_detect(bgc_id, "^BGC\\d{7}\\.1")) |>
+    select(-bgc_id) |>
+    pull()
+```
+
+Finally, we read network information:
+
+```{r read_bigscape2}
+(bigscape_networks <- get_bigscape_networks(bigscape_directory))
+#write_csv(bigscape_networks, "bigscape_networks.csv")
+```

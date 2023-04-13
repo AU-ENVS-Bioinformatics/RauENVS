@@ -103,3 +103,72 @@ get_antismash_modules_ <- function(features){
     contig = names(modules)
   )
 }
+
+#' Extract clustering information from bigscape
+#'
+#' @param bigscape_dir A valid filepath
+#'
+#' @return A DataFrame
+#' @export
+#'
+get_bigscape_clustering <- function(bigscape_dir){
+  clustering_files <-
+    list.files(
+      path = bigscape_dir,
+      pattern = "\\.tsv$",
+      recursive = TRUE,full.names = TRUE
+      ) |>
+    stringr::str_subset(pattern = "clustering")
+  names(clustering_files) <- basename(clustering_files)
+  df <- purrr::map(
+      clustering_files,
+      readr::read_tsv,
+      col_types = 'cc',
+      ) |>
+    dplyr::bind_rows(.id = "table") |>
+    dplyr::mutate(
+      cutoff = stringr::str_match(.data[["table"]], "clustering_c(.+)\\.tsv")[,2],
+      class = stringr::str_match(.data[["table"]], "(^.+?)_clustering")[,2]
+    ) |>
+    dplyr::select(-dplyr::any_of("table"))
+
+  colnames(df) <- c('bgc_id', 'GCF', 'cutoff', 'class')
+  df |>
+    dplyr::distinct() |>
+    tidyr::pivot_wider(values_from = 'GCF', names_from = 'cutoff', names_prefix = "GCF_c")
+}
+
+#' Extract network information from bigscape
+#'
+#' @param bigscape_dir A valid filepath
+#' @param cutoff A numeric value indicating the cutoff.
+#'
+#' @return
+#' @export
+#'
+get_bigscape_networks <- function(bigscape_dir, cutoff = 0.3){
+
+  pattern <- paste0("_c",format(round(cutoff, 2), nsmall = 2),".network$")
+
+  network_files <-
+    list.files(
+      path = bigscape_dir,
+      pattern = pattern,
+      recursive = TRUE,
+      full.names = TRUE)
+  names(network_files) <- network_files
+  x <- purrr::map(
+    network_files, readr::read_tsv,
+    col_select = 1:4,col_types = 'ccdd',
+  ) |>
+    dplyr::bind_rows(.id = "table") |>
+    dplyr::mutate(
+      cutoff = as.numeric(
+        stringr::str_match(.data[["table"]], "_c(.+)\\.network")[,2]
+        ),
+      class = stringr::str_match(.data[["table"]], "(^.+?)_c")[,2]) |>
+    dplyr::select(-table)
+  colnames(x) <- c('bgc_id_1', 'bgc_id_2', 'raw_distance', 'squared_similarity', 'cutoff', 'class')
+  dplyr::distinct(x)
+}
+

@@ -30,7 +30,8 @@ Imports:
     jsonlite,
     stringr,
     tidyr,
-    rlang
+    rlang,
+    readr
 Remotes: 
     hoesler/rwantshue,
     github::pmartinezarbizu/pairwiseAdonis/pairwiseAdonis
