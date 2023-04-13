@@ -8,7 +8,7 @@
 #'
 get_antismash_features <- function(jsons, features_types=NULL){
   fn <- purrr::possibly(get_features_list_,quiet = FALSE)
-  purrr::map(jsons, fn,feature_types = features_types)
+  purrr::map(jsons, fn,feature_types = features_types,.progress = TRUE)
 }
 
 get_features_list_ <- function(json, feature_types = NULL){
