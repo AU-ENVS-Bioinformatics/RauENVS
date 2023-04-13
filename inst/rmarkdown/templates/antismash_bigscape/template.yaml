@@ -1,0 +1,4 @@
+name: Parse antiSMASH and BiG-SCAPE
+description: >
+   A quick preprocessing of antiSMASH and BiG-SCAPE
+create_dir: FALSE

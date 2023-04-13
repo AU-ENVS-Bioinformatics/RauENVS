@@ -1,5 +1,5 @@
 ---
-title: "Parse Antismash & Bigscape"
+title: "Parse Antismash"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Parse Antismash}
