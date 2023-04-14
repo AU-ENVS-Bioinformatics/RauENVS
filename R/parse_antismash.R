@@ -100,8 +100,7 @@ get_antismash_modules_ <- function(features){
     type = extract_from(modules, "qualifiers", "type") |>
       purrr::list_flatten() |> as.character(),
     iterative = purrr::map(qualifiers, ~ 'iterative' %in% names(.)) |>
-      as.logical(),
-    contig = names(modules)
+      as.logical()
   )
 }
 
