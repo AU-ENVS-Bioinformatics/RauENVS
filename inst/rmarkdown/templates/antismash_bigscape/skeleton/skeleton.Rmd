@@ -48,7 +48,7 @@ names(jsons) <- genome_ids
 Now, we want to extract the features for each json file.
 
 ```{r features}
-features <- get_antismash_features(jsons)
+features <- get_antismash_features(jsons, feature_types = c("region", "aSModule"))
 ```
 
 Features is a large list, so inspect it carefully. It should have as many lists as json files:
