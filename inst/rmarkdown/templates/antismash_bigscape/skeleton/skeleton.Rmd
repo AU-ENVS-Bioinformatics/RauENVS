@@ -29,7 +29,7 @@ antismash_directory <- system.file(
   )
 # Edit this to your actual file!!! and remove or comment the example file
 # For example:
-# antismash_directory <- "User/MyPath/antismash"
+# antismash_directory <- "/mnt"
 ```
 
 First, we need to identify the json files:
@@ -48,7 +48,7 @@ names(jsons) <- genome_ids
 Now, we want to extract the features for each json file.
 
 ```{r features}
-features <- get_antismash_features(jsons, feature_types = c("region", "aSModule"))
+features <- get_antismash_features(jsons, c("region", "aSModule"))
 ```
 
 Features is a large list, so inspect it carefully. It should have as many lists as json files:
@@ -89,7 +89,7 @@ Now, we extract the modules:
 
 ```{r modules}
 (modules <- get_antismash_modules(features))
-# write.csv(modules, "modules.csv")
+# write.csv(modules, "/mnt/modules.csv")
 
 ```
 
@@ -103,14 +103,14 @@ bigscape_directory <- system.file(
   )
 # Edit this to your actual file!!! and remove or comment the example file
 # For example:
-# bigscape_directory <- "User/MyPath/bigscape"
+# bigscape_directory <- "/mnt/"
 ```
 
 First, we will create a DataFrame with clustering information:
 
 ```{r read_bigscape}
 (bigscape_clusters <- get_bigscape_clustering(bigscape_directory))
-#write_csv(bigscape_clusters, "bigscape_df.csv")
+#write_csv(bigscape_clusters, "/mnt/bigscape_df.csv")
 
 ```
 
@@ -129,5 +129,5 @@ Finally, we read network information:
 
 ```{r read_bigscape2}
 (bigscape_networks <- get_bigscape_networks(bigscape_directory))
-#write_csv(bigscape_networks, "bigscape_networks.csv")
+#write_csv(bigscape_networks, "/mnt/bigscape_networks.csv")
 ```
