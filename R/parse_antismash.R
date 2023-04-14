@@ -6,10 +6,10 @@
 #' @return A list of list of records.
 #' @export
 #'
-get_antismash_features <- function(jsons, features_types=NULL){
-  fn <- purrr::possibly(get_features_list_,quiet = FALSE)
-  purrr::map(jsons, fn,feature_types = features_types,.progress = TRUE)
-}
+  get_antismash_features <- function(jsons, features_types=NULL){
+    fn <- purrr::possibly(get_features_list_,quiet = FALSE)
+    purrr::map(jsons, fn,feature_types = features_types,.progress = TRUE)
+  }
 
 get_features_list_ <- function(json, feature_types = NULL){
   filter_fn <- function(x) {
@@ -65,7 +65,7 @@ get_antismash_regions_ <- function(features){
     product = extract_from(
       regions, "qualifiers", "product"
     ) |> purrr::map(purrr::compose(sort, as.character)) |> as.list(),
-    contig = names(regions)
+    contig = names(product)
   ) |>
     dplyr::mutate(
       bgc_id = paste0(contig, ".region", stringr::str_pad(
