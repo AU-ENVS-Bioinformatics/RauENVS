@@ -89,7 +89,8 @@ get_antismash_modules <- function(features){
 get_antismash_modules_ <- function(features){
   filter_fn <- function(x) x$type == "aSModule"
   modules <- features |>
-    purrr::map(~purrr::keep(., filter_fn))
+    purrr::map(~purrr::keep(., filter_fn))|>
+    purrr::compact()
   qualifiers <- extract_from(modules, "qualifiers")
   tibble::tibble(
     location = extract_from(modules, "location") |>
