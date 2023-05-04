@@ -7,7 +7,7 @@
 #' @export
 #'
   get_antismash_features <- function(jsons, features_types=NULL){
-    fn <- purrr::possibly(get_features_list_,quiet = FALSE)
+    fn <- purrr::possibly(get_features_list_,quiet = FALSE, otherwise = NULL)
     purrr::map(jsons, fn,feature_types = features_types,.progress = TRUE)
   }
 
@@ -41,7 +41,7 @@ extract_from <- function(x, ...) {
 #' @return A tibble where each where each region is an observation
 #' @export
 get_antismash_regions <- function(features){
-  fn <- purrr::possibly(get_antismash_regions_,quiet = FALSE)
+  fn <- purrr::possibly(get_antismash_regions_,quiet = FALSE, otherwise = NULL)
   purrr::map(features, fn) |>
     dplyr::bind_rows(.id = "file")
   }
@@ -79,7 +79,7 @@ get_antismash_regions_ <- function(features){
 #' @return A tibble where each where each region is an observation
 #' @export
 get_antismash_modules <- function(features){
-  fn <- purrr::possibly(get_antismash_modules_,quiet = FALSE)
+  fn <- purrr::possibly(get_antismash_modules_,quiet = FALSE, otherwise = NULL)
   purrr::map(features, fn) |>
     dplyr::bind_rows(.id = "file")
 }
