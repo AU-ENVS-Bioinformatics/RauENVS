@@ -63,7 +63,6 @@ Now, we are extracting all regions:
 
 ```{r regions}
 (regions <- get_antismash_regions(features))
-# write.csv(regions, "region.csv")
 ```
 
 You will notice that the product column is nested (each cell is a list of values). You can either *paste* the different values:
@@ -73,7 +72,7 @@ regions |>
   dplyr::mutate(
     product = purrr::map(product, paste0, collapse = ",") |>
       as.character()
-    )
+    ) 
 ```
 
 Or you can unnest the DataFrame by creating a new row per each product:
@@ -82,6 +81,15 @@ Or you can unnest the DataFrame by creating a new row per each product:
 regions |>
   tidyr::unnest("product")
 ```
+
+Remember to "save" your processed dataframe before saving it into a file. For example:
+
+```{r unnest_and_write}
+regions_unnest <- regions |>
+  tidyr::unnest("product")
+#write.csv(regions_unnest, "regions.csv")
+```
+
 
 ### Modules
 
