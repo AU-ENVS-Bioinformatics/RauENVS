@@ -24,7 +24,7 @@ Imports:
     rwantshue (>= 0.0.3),
     pairwiseAdonis (>= 0.4.1),
     distill,
-    purrr,
+    purrr (>= 1.0.0),
     dplyr,
     tibble,
     jsonlite,
