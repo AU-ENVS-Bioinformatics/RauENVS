@@ -1,20 +1,26 @@
 ---
-title: "Parse Antismash & Bigscape"
-output: rmarkdown::html_vignette
+title: "Parse AntiSmash and BigScape"
+author:
+  - name: "Author Placeholder"
+    affiliation: AU-ENVS Bioinformatics
+    affiliation_url: https://envs.au.dk/
+output: distill::distill_article
 vignette: >
-  %\VignetteIndexEntry{Parse Antismash}
+  %\VignetteIndexEntry{Parse AntiSmash and BigScape}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-This notebook parses antismash and bigscape output and it is heavily inspired in the work of Roberto Sánchez.
+This notebook parses AntiSmash and BigScape output and it is heavily inspired in the work of Roberto Sánchez.
 
 <https://github.com/robertosanchezn/AS_hqMAGs/blob/main/r_markdown/notebook/parse_bigscape.R>
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  message = FALSE,
+  warning = FALSE
 )
 ```
 
@@ -29,7 +35,7 @@ antismash_directory <- system.file(
   )
 # Edit this to your actual file!!! and remove or comment the example file
 # For example:
-# antismash_directory <- "User/MyPath/antismash"
+# antismash_directory <- "/mnt"
 ```
 
 First, we need to identify the json files:
@@ -48,7 +54,7 @@ names(jsons) <- genome_ids
 Now, we want to extract the features for each json file.
 
 ```{r features}
-features <- get_antismash_features(jsons)
+features <- get_antismash_features(jsons, c("region", "aSModule"))
 ```
 
 Features is a large list, so inspect it carefully. It should have as many lists as json files:
@@ -63,7 +69,6 @@ Now, we are extracting all regions:
 
 ```{r regions}
 (regions <- get_antismash_regions(features))
-# write.csv(regions, "region.csv")
 ```
 
 You will notice that the product column is nested (each cell is a list of values). You can either *paste* the different values:
@@ -73,7 +78,7 @@ regions |>
   dplyr::mutate(
     product = purrr::map(product, paste0, collapse = ",") |>
       as.character()
-    )
+    ) 
 ```
 
 Or you can unnest the DataFrame by creating a new row per each product:
@@ -83,13 +88,22 @@ regions |>
   tidyr::unnest("product")
 ```
 
+Remember to "save" your processed dataframe before saving it into a file. For example:
+
+```{r unnest_and_write}
+regions_unnest <- regions |>
+  tidyr::unnest("product")
+#write.csv(regions_unnest, "regions.csv")
+```
+
+
 ### Modules
 
 Now, we extract the modules:
 
 ```{r modules}
 (modules <- get_antismash_modules(features))
-# write.csv(modules, "modules.csv")
+# write.csv(modules, "/mnt/modules.csv")
 
 ```
 
@@ -103,14 +117,14 @@ bigscape_directory <- system.file(
   )
 # Edit this to your actual file!!! and remove or comment the example file
 # For example:
-# bigscape_directory <- "User/MyPath/bigscape"
+# bigscape_directory <- "/mnt/"
 ```
 
 First, we will create a DataFrame with clustering information:
 
 ```{r read_bigscape}
 (bigscape_clusters <- get_bigscape_clustering(bigscape_directory))
-#write_csv(bigscape_clusters, "bigscape_df.csv")
+#write_csv(bigscape_clusters, "/mnt/bigscape_df.csv")
 
 ```
 
@@ -129,5 +143,5 @@ Finally, we read network information:
 
 ```{r read_bigscape2}
 (bigscape_networks <- get_bigscape_networks(bigscape_directory))
-#write_csv(bigscape_networks, "bigscape_networks.csv")
+#write_csv(bigscape_networks, "/mnt/bigscape_networks.csv")
 ```

@@ -1,0 +1,528 @@
+---
+title: "Phyloseq analysis template"
+author:
+  - name: "Author Placeholder"
+    affiliation: AU-ENVS Bioinformatics
+    affiliation_url: https://envs.au.dk/
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE}
+library(RauENVS)
+library(tidyverse)
+library(phyloseq)
+library(microbiome)
+library(cowplot)
+library(vegan)
+library(magrittr)
+set_theme_AU_ENVS()
+data("phyloseq_template_toy_data")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This is a RMarkdown template for doing a quick analysis of an OTU and taxonomic table using RMarkdown.
+
+It contains toy data to illustrate what this notebook does. **First, make sure you run the entire notebook with the toy example**. To do this, click on "Knit" in Rstudio.
+
+## Read your data
+
+You need 3 tabulated files with contains metadata, OTU and taxonomy, respectively. Please make sure you read the data correctly. Delete the code that generates the toy example and uncomment the code that reads files. 
+
+#### Read metadata table
+
+You metadata table **must** contain a column named rowname and as many features as desired. Either edit the tabulated file or rename the column with the sample identifier. Your metadata table should look something like the example below.  
+
+By assigning a variable inside () we print a summary.
+
+```{r}
+# (metadata_tbl <- readr::read_csv("metadata_dummy.csv"))
+(metadata_tbl <- phyloseq_template_toy_data$meta)
+```
+#### Read OTU table
+
+Please, make sure you take into account if the table is tabulated using ",", ";" or tabs. Your otu table should look something like the example below.  
+
+```{r}
+# otu_tbl <- readr::read_csv("otu_dummy.csv")
+(otu_tbl <- phyloseq_template_toy_data$otu)
+```
+
+#### Read OTU table
+
+Please, make sure you take into account if the table is tabulated using ",", ";" or tabs. Your taxonomic table should look something like the example below. 
+
+```{r}
+# taxonomic_tbl <- readr::read_csv("taxonomic_dummy.csv")
+(taxonomic_tbl <- phyloseq_template_toy_data$taxa)
+```
+
+#### Sanity check
+
+```{r}
+stopifnot(ncol(otu_tbl) == nrow(metadata_tbl))
+stopifnot(nrow(otu_tbl) == nrow(taxonomic_tbl))
+```
+
+## Preprocess your data 
+
+#### Transform into phyloseq object
+
+```{r}
+otu <- otu_tbl |>
+  phyloseq::otu_table(taxa_are_rows = TRUE)
+
+taxa <- taxonomic_tbl |>
+  as.matrix() |>
+  phyloseq::tax_table()
+
+meta <- metadata_tbl|>
+  tibble::column_to_rownames(var = "rowname")|>
+  phyloseq::sample_data()
+```
+
+Now, we combine OTU table, taxonomy table and metadata into a `phyloseq` object.
+
+```{r}
+(physeq <- phyloseq(otu, taxa, meta))
+```
+
+#### Dealing with taxonomic categories
+
+We will remove the SILVA prefix, anything labelled "unknown" (this will not affect abundances) and replace spaces with underscores.
+
+```{r}
+#|label: prepro-taxa
+# Remove prefix
+tax_table(physeq) <- gsub("Unknown.*", "", tax_table(physeq))
+tax_table(physeq) <- tax_table(physeq) |>
+  remove_silva_prefix_from_taxtable()
+```
+
+#### Data cleaning
+
+You may want to do some custom data cleaning here using the function `subset_taxa`. As an example, we can remove all taxa which belong to the SAR Kingdom groups. Notice how the number of taxa have been reduced.
+
+```{r}
+physeq <- physeq |>
+  subset_taxa(Kingdom != "SAR")
+physeq
+```
+
+## Making unique OTU labels
+
+The function `make_physeq_tax_label_unique` would only work if "empty" taxonomic ranks are encoded as "". Please, make sure of it before running the function. Otherwise, you will get ugly unique OTU labels (in purpose). 
+
+```{r}
+stopifnot(
+  all(!grepl(" ", tax_table(physeq), fixed=TRUE))
+)
+stopifnot(
+  all(!is.na(tax_table(physeq)))
+)
+```
+
+
+First, we create the new labels: 
+```{r}
+new_otu_labels <-  tax_table(physeq) |>
+  make_physeq_tax_label_unique()
+head(new_otu_labels)
+```
+
+And, if everything looks fine, we assign the new labels. 
+
+```{r}
+taxa_names(physeq) <- new_otu_labels
+```
+
+#### Transform sample counts
+
+How you transform your counts, or do so, will depend on the experiment and factors such as the number of replicates.
+
+```{r}
+physeq_rel <- physeq |>
+  transform_sample_counts(function(x) x/sum(x)*100)
+  
+physeq_mean_rel <-  physeq_rel |>
+  merge_samples("depth") |>
+  transform_sample_counts(function(x) x/sum(x)*100)       
+sample_sums(physeq_mean_rel)
+```
+
+
+## Inspect data
+
+Now, we can inspect the resulting tables: 
+
+```{r}
+#| label: tbl-otu
+#| tbl-cap: "OTU table"
+physeq_rel |>
+  otu_table()|>
+  as.data.frame()
+```
+
+```{r}
+#| label: tbl-taxa
+#| tbl-cap: "Taxonomic table"
+physeq_rel |>
+  tax_table()|>
+  as.data.frame()
+```
+
+Check if everything looks good:
+
+```{r}
+#|label: sample_sums
+sample_sums(physeq)
+sample_names(physeq)
+rank_names(physeq)
+sample_variables(physeq)
+```
+
+# Data analysis
+
+## Perform an ordination using Nonmetric Multidimensional Scaling
+
+Now, we ordinate using the NMDS method and bray distance. NMDS performs a Non-metric MultiDimenstional Scaling of a sample-wise ecological distance matrix onto a user-specified number of axes, k (in this case 2).
+
+```{r}
+#| label: ordination 
+(physeq_nmds <- ordinate(physeq_rel, method = "NMDS", distance = "bray"))
+
+```
+
+## Goodness of Fit and Shepard Plot for Nonmetric Multidimensional Scaling
+
+Now, we find the goodness of fit measure for the points in the previous nonmetric multidimensional scaling. The Shepard diagram is shown in the following figure:
+
+```{r}
+#| label: fig-stressplot 
+#| fig-cap: A plot of ordination distances and monotone or linear fit line against original dissimilarities.
+vegan::stressplot(physeq_nmds)
+
+```
+
+Now, we'll create a function for a) ordinate and b) plot. This way we'll be able to plot for different subsets of taxa at the same time.
+
+```{r}
+#| label: fig-NMDS
+#| message: false
+plot_nmds <- function(x, ...){
+  y <-ordinate(x, method = "NMDS", distance = "bray")
+  plot_ordination(x, y, ...)+
+  geom_point(size=3)+
+  theme(
+    legend.title = element_blank(),
+    legend.position = "right"
+  )+
+  stat_ellipse()
+}
+
+nmds <- list(
+  all = plot_nmds(
+    physeq_rel,type ="samples", color = "layer",shape = "layer"
+    ),
+  phyla = physeq_rel |>
+    tax_glom(taxrank = "Phylum", NArm = FALSE) |>
+    plot_nmds(
+      type ="samples", color = "layer", shape = "layer"
+      ),
+  class = physeq_rel |>
+    tax_glom(taxrank = "Class", NArm = FALSE) |>
+    plot_nmds(
+      type ="samples", color = "layer", shape = "layer"
+      )
+)
+```
+
+You can plot each plot individually:
+
+```{r,eval=FALSE}
+nmds$all
+```
+
+Or use plot_grid for a list of plots:
+
+```{r}
+plot_grid(plotlist = nmds)
+```
+
+## Richness plot
+
+```{r}
+###----Richness all----
+
+richness_plot <- plot_richness(
+  physeq, x="layer", color =  "depth",
+  measures=c("Observed","Shannon","Simpson","InvSimpson")
+  )
+richness_plot <- richness_plot + geom_boxplot(
+  data = richness_plot$data, aes(color = NULL), alpha = 0.05)+
+  theme(
+    legend.title = element_blank(),
+    legend.position = "right"
+  )
+richness_plot
+```
+
+## Stacked bar plots
+
+```{r}
+physeq_mean_rel_phylum <- physeq_mean_rel |>
+  tax_glom(taxrank = "Phylum") |>
+  transform_sample_counts(function(x) x/sum(x)*100) 
+```
+
+Since we get too many phyla to plot in a stacked barplot, we will filter the low abundant ones and put them into one category. To do this, we will use the tidyverse again. First, we will create a normal data frame out of the phyloseq object and then add another column where all taxa with abundance lower than 3% will be renamed to "\< 3%".
+
+```{r}
+physeq_mean_rel_phylumDF <- physeq_mean_rel_phylum |>
+  #transform phyloseq object to a data frame (DF)
+  psmelt()|>
+  #make the phyla characters, not factors
+  mutate(Phylum = as.character(Phylum))|>
+  #there are some reads that were assigned only to the kingdom level, 
+  # i.e. NA on the phylum level, so we will rename them
+  mutate(
+    Phylum = replace(Phylum, Phylum == "NA", "unassigned"),
+    Phylum2 = replace(Phylum, Abundance < 3, "< 3%")
+    )|>
+  #reorder the phyla so that they are stacked according to abundance
+  mutate(
+    Phylum2 = reorder(Phylum2, Abundance)
+  )
+```
+
+Now, we plot the stacked plot. You can change colors editing function get_wants_hue. Default is optimized for colorblindness.
+
+```{r}
+n_phyla <- length(levels(physeq_mean_rel_phylumDF$Phylum2))
+
+stacked_plot <- physeq_mean_rel_phylumDF |>
+  ggplot(aes(depth, Abundance, fill=Phylum2)) +
+  geom_bar(stat = "identity") +
+  labs(x= "depth [cm]",y= "Relative abundance [%]",
+     fill= "Phyla")+
+  scale_fill_manual(values = get_wants_hue(n_phyla))+
+  theme(legend.position="bottom") +
+  scale_x_continuous(breaks = seq(10, 100, 10))
+stacked_plot 
+```
+
+You can obtain figures with more than one plot using plot_grid. For example:
+
+https://wilkelab.org/cowplot/articles/plot_grid.html
+
+```{r}
+final <- plot_grid(
+  stacked_plot, richness_plot,nrow = 2,labels = c("A", "B")
+  )
+final
+```
+
+## ANOVA
+
+First, create objects for microbiome package:
+
+```{r}
+(otu_microbiome <- microbiome::abundances(physeq))
+(meta_microbiome <- microbiome::meta(physeq))
+```
+
+Now, we use adonis for those variables we are interested. We should probably use adonis2, because adonis have been deprecated.
+
+```{r}
+
+permanova_depth <- adonis2(
+  t(otu_microbiome)~depth,
+  data = meta_microbiome,
+  permutations=999, method = "bray"
+  )
+permanova_depth
+
+```
+
+Now layer:
+
+```{r}
+permanova_layer <- adonis2(
+  t(otu_microbiome)~layer,
+  data = meta_microbiome,
+  permutations=999, method = "bray"
+  )
+permanova_layer
+```
+
+If you have several "models", consider a more general approach using lists:
+
+```{r}
+adonis2_formulas <- list(
+  layer = t(otu_microbiome)~layer,
+  depth = t(otu_microbiome)~depth
+)
+permanovas <- adonis2_formulas |>
+  map(
+    adonis2, data = meta_microbiome,
+    permutations=999, method = "bray"
+    )
+permanovas$layer
+permanovas$depth
+```
+
+## Multivariate homogeneity of groups dispersions
+
+```{r}
+# Calculate distance
+dist <- vegan::vegdist(t(otu_microbiome), method="bray")
+# betadisper is a multivariate analogue of Levene's test for homogeneity of variances
+mod_layer <- vegan::betadisper(
+  dist, meta_microbiome$layer, type="centroid"
+  )
+mod_layer$layer <- meta_microbiome$layer
+```
+
+## TukeyHSD
+
+```{r}
+(tukey_test <- TukeyHSD(mod_layer))
+```
+
+```{r}
+plot(tukey_test)
+```
+
+## PCoA with variance in axis
+
+```{r}
+get_variance <- function(mod, number, digits = 2){
+  variance <- mod$eig[number]/sum(mod$eig)*100
+  variance |>
+    round(digits) |> 
+    format(nsmall = digits)
+}
+x_label <- paste0('PCoA 1 (', get_variance(mod_layer, 1),'%)')
+y_label <- paste0('PCoA 2 (', get_variance(mod_layer, 2),'%)')
+
+par(mfrow = c(1,2))
+plot(
+  mod_layer,  hull=FALSE, ellipse=TRUE,
+  main = "PCoA, layer", sub=NULL,
+  col= RauENVS::get_wants_hue(seed = 10, n = 3, palette = "default"),
+  cex=2, lwd=1,
+  xlab = x_label,
+  ylab = y_label
+  ) #+
+
+```
+
+## Boxplot of distances with pvalues from Tukey Test
+
+We can add p-values from to the box plot of the distances:
+
+```{r}
+
+get_pos_whisker <- function(x){
+  # Calculate whisker position
+  hinge <- as.numeric(quantile(x, probs = 0.75))
+  upper_max <- hinge +IQR(x)*1.5 
+  x |> 
+    keep(~ . < upper_max) |>
+    max()
+}
+# Calculate label position
+pos <-  c(
+  by(mod_layer$distances, mod_layer$group, get_pos_whisker)
+  )
+
+# You can run the next line for calculating automatically the
+# labels based in p-values.
+tukey_label <-   data.frame(
+    label = rownames(tukey_test$group)[which(
+      tukey_test$group[,'p adj']< 0.05
+      )]
+  ) |>
+  separate(label,sep = '-', into = c('from', 'to'),remove = T) %$%
+  data.frame(from = c(from, to), to = c(to, from)) |>
+  group_by(from)|>
+  summarise(label = paste0(to, collapse = ','))|>
+  column_to_rownames('from')|>
+  pull(label)
+
+# However, for this data, there is no significance difference 
+# between groups. We can still plot those labels as example:
+
+custom_label <- c('A', 'V', 'AV', 'T2')
+
+tibble(
+  distances = mod_layer$distances,
+  group = mod_layer$group,
+) |>
+  ggplot(aes(x = group, y = distances, fill = group))+
+  geom_boxplot()+
+  geom_text(
+    data = data.frame(
+      distances = pos,group = names(pos),label = custom_label
+      ),
+    aes(label = label),
+    hjust = -1, vjust = -0.5
+    )+
+  xlab('Layer')+ylab('Distance to Centroid')+
+  theme(legend.position = 'None')
+
+
+
+```
+
+## Annotating NMDS with information from permanova
+
+-   "Numbers on the top indicate the stress values.
+
+-   Asterisks represent the significance level of PERMANOVA (∗adjusted P \< 0.05 or ∗∗adjusted P \< 0.01)"
+
+First, we extract information from permanova
+
+```{r}
+(
+  r2_label <- permanova_layer$R2[[1]] |>
+  round(2) |>
+  format(nsmall = 2)
+)
+(
+p_value_label <- permanova_layer$`Pr(>F)`[[1]]%>%
+  {case_when(
+    . < 0.01 ~ "**",
+    . < 0.05 ~ "*",
+    . >= 0.05 ~ "",
+    )}
+)
+```
+
+```{r}
+original_plot <- plot_ordination(
+  physeq_rel, physeq_nmds,
+  type ="samples", color = "layer",shape = "layer"
+  )+
+  geom_point(size=3)+
+  stat_ellipse()+
+  theme(
+    legend.position="bottom",
+    legend.title = element_blank()
+    )
+
+original_plot +
+  annotate(
+    geom="text",
+    x = max(original_plot$data$NMDS1) + 0.4,
+    y = max(original_plot$data$NMDS2),
+    label= r2_label,
+    size = 5
+    )+
+  annotate(
+    geom="text",
+    x = max(original_plot$data$NMDS1) + 0.4,
+    y = min(original_plot$data$NMDS2),
+    label= p_value_label,
+    size = 10
+    )
+```

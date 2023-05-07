@@ -1,17 +1,22 @@
 #' Set default AU-ENVS R theme
+#'
 #' This function will override some layout options that will
 #' affect how the graphics look. It has side effects.
 #'
 #' @param locale  A character vector of one indicating the desired locale.
-#' Most of the time, the default "English_Denmark" is desired, although
+#' Most of the time, the default "English_Denmark" is ok, although
 #' sometimes you may want to use the "Denmark_English" option for
 #' Danish months,  names, etc...
 #'
 #' @export
 #'
 #' @examples
-#' \dontrun{set_theme_AU_ENVS()}
-#' \dontrun{set_theme_AU_ENVS("English_Denmark")}
+#' data <- data.frame(x = rnorm(10), y = rnorm(10), mode = rep(c("A", "B"), 5))
+#' ggplot2::ggplot(data, ggplot2::aes(x, y, color = mode))+
+#'   ggplot2::geom_point()
+#' set_theme_AU_ENVS()
+#' ggplot2::ggplot(data, ggplot2::aes(x, y, color = mode))+
+#'   ggplot2::geom_point()
 set_theme_AU_ENVS <- function(locale = "English_Denmark"){
 
   options(digits = 3)        # number of digits printed by R default (vectors, data.frames, lists)
@@ -42,6 +47,3 @@ set_theme_AU_ENVS <- function(locale = "English_Denmark"){
   options(ggplot2.discrete.colour   = list(get_wants_hue(7)))
 
 }
-
-
-

@@ -2,24 +2,25 @@
 % Please edit documentation in R/theme_AU_ENVS.R
 \name{set_theme_AU_ENVS}
 \alias{set_theme_AU_ENVS}
-\title{Set default AU-ENVS R theme
-This function will override some layout options that will
-affect how the graphics look. It has side effects.}
+\title{Set default AU-ENVS R theme}
 \usage{
 set_theme_AU_ENVS(locale = "English_Denmark")
 }
 \arguments{
 \item{locale}{A character vector of one indicating the desired locale.
-Most of the time, the default "English_Denmark" is desired, although
+Most of the time, the default "English_Denmark" is ok, although
 sometimes you may want to use the "Denmark_English" option for
 Danish months,  names, etc...}
 }
 \description{
-Set default AU-ENVS R theme
 This function will override some layout options that will
 affect how the graphics look. It has side effects.
 }
 \examples{
-\dontrun{set_theme_AU_ENVS()}
-\dontrun{set_theme_AU_ENVS("English_Denmark")}
+data <- data.frame(x = rnorm(10), y = rnorm(10), mode = rep(c("A", "B"), 5))
+ggplot2::ggplot(data, ggplot2::aes(x, y, color = mode))+
+  ggplot2::geom_point()
+set_theme_AU_ENVS()
+ggplot2::ggplot(data, ggplot2::aes(x, y, color = mode))+
+  ggplot2::geom_point()
 }

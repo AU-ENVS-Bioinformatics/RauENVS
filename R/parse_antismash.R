@@ -143,7 +143,7 @@ get_bigscape_clustering <- function(bigscape_dir){
 #' @param bigscape_dir A valid filepath
 #' @param cutoff A numeric value indicating the cutoff.
 #'
-#' @return
+#' @return A DataFrame
 #' @export
 #'
 get_bigscape_networks <- function(bigscape_dir, cutoff = 0.3){

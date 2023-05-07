@@ -18,7 +18,6 @@ from a phyloseq taxonomyTable. You still need to assign that
 (see example below).
 }
 \examples{
-\dontrun{
 taxtable <- structure(
   c("Bacteria", "Proteobacteria", "Deltaproteobacteria","", "", "", ""),
   dim = c(1L, 7L),
@@ -27,5 +26,4 @@ taxtable <- structure(
    "Family", "Genus", "Species")
    ))
 make_physeq_tax_label_unique(taxtable)
-}
 }

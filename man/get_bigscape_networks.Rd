@@ -11,6 +11,9 @@ get_bigscape_networks(bigscape_dir, cutoff = 0.3)
 
 \item{cutoff}{A numeric value indicating the cutoff.}
 }
+\value{
+A DataFrame
+}
 \description{
 Extract network information from bigscape
 }

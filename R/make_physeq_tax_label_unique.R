@@ -10,7 +10,6 @@
 #' @export
 #'
 #' @examples
-#'\dontrun{
 #' taxtable <- structure(
 #'   c("Bacteria", "Proteobacteria", "Deltaproteobacteria","", "", "", ""),
 #'   dim = c(1L, 7L),
@@ -19,7 +18,6 @@
 #'    "Family", "Genus", "Species")
 #'    ))
 #' make_physeq_tax_label_unique(taxtable)
-#' }
 make_physeq_tax_label_unique <- function(taxtable){
   taxtable |>
     as.data.frame() |>
