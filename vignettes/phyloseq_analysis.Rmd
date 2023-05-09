@@ -1,13 +1,24 @@
 ---
 title: "Phyloseq analysis template"
-author:
-  - name: "Author Placeholder"
-    affiliation: AU-ENVS Bioinformatics
-    affiliation_url: https://envs.au.dk/
-output: distill::distill_article
+author: "AU-ENVS Bioinformatics"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Phyloseq analysis template}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include=FALSE}
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  tidy = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+```{r setup, message=FALSE, warning=FALSE}
 library(RauENVS)
 library(tidyverse)
 library(phyloseq)
@@ -17,7 +28,6 @@ library(vegan)
 library(magrittr)
 set_theme_AU_ENVS()
 data("phyloseq_template_toy_data")
-knitr::opts_chunk$set(echo = TRUE)
 ```
 
 This is a RMarkdown template for doing a quick analysis of an OTU and taxonomic table using RMarkdown.
@@ -36,7 +46,8 @@ By assigning a variable inside () we print a summary.
 
 ```{r}
 # (metadata_tbl <- readr::read_csv("metadata_dummy.csv"))
-(metadata_tbl <- phyloseq_template_toy_data$meta)
+metadata_tbl <- phyloseq_template_toy_data$meta
+knitr::kable(metadata_tbl)
 ```
 #### Read OTU table
 
@@ -44,7 +55,8 @@ Please, make sure you take into account if the table is tabulated using ",", ";"
 
 ```{r}
 # otu_tbl <- readr::read_csv("otu_dummy.csv")
-(otu_tbl <- phyloseq_template_toy_data$otu)
+otu_tbl <- phyloseq_template_toy_data$otu
+otu_tbl |> head() |> knitr::kable()
 ```
 
 #### Read OTU table
@@ -53,7 +65,8 @@ Please, make sure you take into account if the table is tabulated using ",", ";"
 
 ```{r}
 # taxonomic_tbl <- readr::read_csv("taxonomic_dummy.csv")
-(taxonomic_tbl <- phyloseq_template_toy_data$taxa)
+taxonomic_tbl <- phyloseq_template_toy_data$taxa
+taxonomic_tbl |> head() |> knitr::kable()
 ```
 
 #### Sanity check
@@ -159,7 +172,9 @@ Now, we can inspect the resulting tables:
 #| tbl-cap: "OTU table"
 physeq_rel |>
   otu_table()|>
-  as.data.frame()
+  as.data.frame() |>
+  head() |>
+  knitr::kable()
 ```
 
 ```{r}
@@ -167,7 +182,9 @@ physeq_rel |>
 #| tbl-cap: "Taxonomic table"
 physeq_rel |>
   tax_table()|>
-  as.data.frame()
+  as.data.frame() |>
+  head() |>
+  knitr::kable()
 ```
 
 Check if everything looks good:
@@ -314,7 +331,7 @@ You can obtain figures with more than one plot using plot_grid. For example:
 
 https://wilkelab.org/cowplot/articles/plot_grid.html
 
-```{r}
+```{r,eval=FALSE}
 final <- plot_grid(
   stacked_plot, richness_plot,nrow = 2,labels = c("A", "B")
   )
@@ -326,8 +343,13 @@ final
 First, create objects for microbiome package:
 
 ```{r}
-(otu_microbiome <- microbiome::abundances(physeq))
-(meta_microbiome <- microbiome::meta(physeq))
+otu_microbiome <- microbiome::abundances(physeq)
+meta_microbiome <- microbiome::meta(physeq)
+
+
+otu_microbiome |> head() |> knitr::kable()
+meta_microbiome |> knitr::kable()
+
 ```
 
 Now, we use adonis for those variables we are interested. We should probably use adonis2, because adonis have been deprecated.

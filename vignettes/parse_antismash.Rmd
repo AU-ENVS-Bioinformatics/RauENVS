@@ -19,6 +19,7 @@ This notebook parses AntiSmash and BigScape output and it is heavily inspired in
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
+  tidy = TRUE,
   message = FALSE,
   warning = FALSE
 )
@@ -68,7 +69,10 @@ stopifnot(length(features) == length(jsons))
 Now, we are extracting all regions:
 
 ```{r regions}
-(regions <- get_antismash_regions(features))
+regions <- get_antismash_regions(features)
+regions |>
+  head(30) |>
+  knitr::kable()
 ```
 
 You will notice that the product column is nested (each cell is a list of values). You can either *paste* the different values:
@@ -78,14 +82,18 @@ regions |>
   dplyr::mutate(
     product = purrr::map(product, paste0, collapse = ",") |>
       as.character()
-    ) 
+    ) |>
+  head(30) |>
+  knitr::kable()
 ```
 
 Or you can unnest the DataFrame by creating a new row per each product:
 
 ```{r unnest}
 regions |>
-  tidyr::unnest("product")
+  tidyr::unnest("product")|>
+  head(30) |>
+  knitr::kable()
 ```
 
 Remember to "save" your processed dataframe before saving it into a file. For example:
@@ -102,14 +110,14 @@ regions_unnest <- regions |>
 Now, we extract the modules:
 
 ```{r modules}
-(modules <- get_antismash_modules(features))
+modules <- get_antismash_modules(features)
 # write.csv(modules, "/mnt/modules.csv")
-
+modules |>
+  head(30) |>
+  knitr::kable()
 ```
 
 ## BigScape
-
-### Set up
 
 ```{r setup2}
 bigscape_directory <- system.file(
@@ -123,9 +131,11 @@ bigscape_directory <- system.file(
 First, we will create a DataFrame with clustering information:
 
 ```{r read_bigscape}
-(bigscape_clusters <- get_bigscape_clustering(bigscape_directory))
+bigscape_clusters <- get_bigscape_clustering(bigscape_directory)
 #write_csv(bigscape_clusters, "/mnt/bigscape_df.csv")
-
+bigscape_clusters |>
+  head(30) |>
+  knitr::kable()
 ```
 
 We can extract more information. For example, for finding GCFs
@@ -142,6 +152,9 @@ bigscape_clusters |>
 Finally, we read network information:
 
 ```{r read_bigscape2}
-(bigscape_networks <- get_bigscape_networks(bigscape_directory))
+bigscape_networks <- get_bigscape_networks(bigscape_directory)
 #write_csv(bigscape_networks, "/mnt/bigscape_networks.csv")
+bigscape_networks |>
+  head(30) |>
+  knitr::kable()
 ```
