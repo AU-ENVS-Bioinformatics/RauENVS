@@ -14,7 +14,9 @@ You can start using it by loading the library
 library(RauENVS)
 ```
 
-and find RMarkdown templates in Rstudio. New file -> RMarkdown -> Template
+and find RMarkdown templates in Rstudio. New file -> RMarkdown -> Template . 
+
+> Please close and open Rstudio if you don't see changes immediately :). 
 
 ![Example](https://rstudio.github.io/rstudio-extensions/resources/rmarkdown_templates/images/new_r_markdown.png)
 
