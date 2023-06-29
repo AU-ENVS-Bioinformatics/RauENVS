@@ -21,3 +21,4 @@ and find RMarkdown templates in Rstudio. New file -> RMarkdown -> Template .
 ![Example](https://rstudio.github.io/rstudio-extensions/resources/rmarkdown_templates/images/new_r_markdown.png)
 
 
+If not using RMarkdown, download the template from Github (look into the "inst/rmarkdown/templates/) directory. All notebooks are called "skeleton.Rmd". 
