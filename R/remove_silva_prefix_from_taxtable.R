@@ -24,5 +24,5 @@ remove_silva_prefix_from_taxtable <- function(taxtable){
     paste(collapse = "|") |>
     gsub("", taxtable)
   ## Trim white spaces
-  gsub('\\s+', '',x)
+  gsub('^\\s+', '',x)
 }
